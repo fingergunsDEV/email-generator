@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HGM Intelligence Email Generator | Spreadsheet Workflow</title>
+    <title>HGM Intelligence Email Generator – Spreadsheet Workflow</title>
     <style>
         /* ── Reset & Root ── */
         * {
@@ -94,9 +94,11 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
         }
         .file-upload-wrap input[type="file"] {
             flex: 1;
+            min-width: 120px;
             font-size: 11px;
             color: var(--text-muted);
             background: var(--bg-input);
@@ -125,56 +127,67 @@
 
         /* ── Mapping Grid ── */
         .mapping-area {
-            margin-top: 10px;
             display: none;
-            /* shown via JS */;
+            margin-top: 10px;
         }
         .mapping-area.visible {
             display: block;
         }
+
         .mapping-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4px 10px;
+            gap: 6px 12px;
             margin: 6px 0 10px 0;
             background: rgba(0, 0, 0, 0.3);
-            padding: 8px 10px;
+            padding: 10px 12px;
             border-radius: var(--radius);
             border: 1px solid var(--border);
         }
-        .mapping-grid .mapping-item {
+
+        .mapping-item {
             display: flex;
             align-items: center;
-            gap: 4px;
-            font-size: 11px;
+            gap: 6px;
+            min-width: 0;
+            /* prevent overflow */;
         }
-        .mapping-grid .mapping-item .field-label {
-            color: var(--text-muted);
-            font-weight: 500;
-            min-width: 52px;
-            text-transform: uppercase;
+
+        .mapping-item .field-label {
+            flex-shrink: 0;
+            min-width: 44px;
             font-size: 9px;
+            text-transform: uppercase;
             letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
         }
-        .mapping-grid .mapping-item select {
+
+        .mapping-item select {
             flex: 1;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
             background: var(--bg-input);
             border: 1px solid var(--border);
             color: #fff;
             font-size: 10px;
-            padding: 2px 4px;
+            padding: 4px 4px;
             border-radius: var(--radius);
             cursor: pointer;
-            min-width: 0;
+            appearance: auto;
+            /* keep native arrow on mobile */;
         }
-        .mapping-grid .mapping-item select:focus {
+        .mapping-item select:focus {
             outline: none;
             border-color: var(--gold);
         }
-        .mapping-grid .mapping-item .mapped-badge {
+
+        .mapping-item .mapped-badge {
             font-size: 8px;
             color: var(--gold);
             margin-left: 2px;
+            flex-shrink: 0;
         }
 
         /* ── Row Navigation ── */
@@ -202,6 +215,7 @@
             padding: 4px 6px;
             border-radius: var(--radius);
             cursor: pointer;
+            max-width: 180px;
         }
         .row-nav select:focus {
             outline: none;
@@ -232,6 +246,7 @@
             font-size: 10px;
             color: var(--text-muted);
             margin-left: auto;
+            white-space: nowrap;
         }
 
         /* ── Batch Actions ── */
@@ -253,6 +268,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
+            flex: 0 1 auto;
         }
         .batch-actions .btn-sm:hover {
             border-color: var(--gold);
@@ -318,7 +334,7 @@
             margin-top: 1px;
         }
 
-        /* ── Email Body (special) ── */
+        /* ── Email Body ── */
         .email-body-wrap .input-group textarea {
             min-height: 80px;
             font-size: 12px;
@@ -456,7 +472,9 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* ── Responsive tweaks ── */
+        /* ── Responsive ── */
+
+        /* Tablet / small laptop: sidebar full width, mapping grid stays 2 cols until narrower */
         @media (max-width: 820px) {
             body {
                 flex-direction: column;
@@ -477,15 +495,35 @@
             .fields-grid {
                 grid-template-columns: 1fr 1fr;
             }
+        }
+
+        /* Medium screens: mapping grid goes single column earlier for better readability */
+        @media (max-width: 650px) {
             .mapping-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
+                gap: 4px 0;
+                padding: 8px 10px;
+            }
+            .mapping-item .field-label {
+                min-width: 40px;
+                font-size: 8px;
+            }
+            .mapping-item select {
+                font-size: 11px;
+                padding: 5px 4px;
+            }
+            .row-nav select {
+                max-width: 140px;
+            }
+            .file-upload-wrap input[type="file"] {
+                min-width: 100px;
+                font-size: 10px;
             }
         }
+
+        /* Mobile: stack everything */
         @media (max-width: 500px) {
             .fields-grid {
-                grid-template-columns: 1fr;
-            }
-            .mapping-grid {
                 grid-template-columns: 1fr;
             }
             .sidebar {
@@ -493,10 +531,64 @@
             }
             .row-nav {
                 flex-wrap: wrap;
+                gap: 6px;
+            }
+            .row-nav select {
+                max-width: 100%;
+                flex: 1 1 80px;
+            }
+            .row-count {
+                margin-left: 0;
+                width: 100%;
+                text-align: right;
+            }
+            .batch-actions .btn-sm {
+                flex: 1 1 auto;
+                min-width: 60px;
+            }
+            .action-row .btn-action {
+                min-width: 80px;
+                padding: 8px 12px;
+                font-size: 9px;
+            }
+            .mapping-item .field-label {
+                min-width: 36px;
+                font-size: 8px;
+            }
+            .mapping-item select {
+                font-size: 11px;
+                padding: 6px 4px;
+            }
+            .file-upload-wrap {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .file-upload-wrap .file-status {
+                white-space: normal;
+                text-align: center;
+                margin-top: 2px;
             }
         }
 
-        /* ── Misc ── */
+        /* very narrow screens */
+        @media (max-width: 380px) {
+            .mapping-item {
+                flex-wrap: wrap;
+                gap: 2px;
+            }
+            .mapping-item .field-label {
+                min-width: 100%;
+                font-size: 8px;
+            }
+            .mapping-item select {
+                flex: 1 1 100%;
+            }
+            .mapping-item .mapped-badge {
+                display: none;
+            }
+        }
+
+        /* ── Utilities ── */
         .hidden {
             display: none !important;
         }
@@ -537,7 +629,7 @@
     <div class="sidebar">
 
         <h2>⛭ Email Generator</h2>
-        <div class="subhead">Internal Tool</div>
+        <div class="subhead">Spreadsheet → Personalized Emails</div>
 
         <!-- ── SPREADSHEET IMPORT ── -->
         <div class="import-section">
