@@ -706,8 +706,18 @@
         <div class="email-body-wrap">
             <div class="subhead" style="margin-bottom: 4px;">Email Body</div>
             <div class="input-group">
-                <textarea id="emailBody" rows="4" placeholder="Paste or type the email body text…">I noticed the Acme Inc. site is currently missing critical schema markup. Implementing rich snippets helps your NMLS details and services stand out significantly in search results, driving more targeted traffic. Could we schedule a fast 15-minute call next week so I can show you how easily we deploy this fix?</textarea>
-                <div class="field-hint">This text is inserted into the HTML template. Use <span class="text-gold">{{field}}</span> placeholders to inject data (optional).</div>
+                <textarea id="emailBody" rows="4" placeholder="Paste or type the email body text…">Hi {{firstName}},
+
+I hope this message finds you well. I’ve been reviewing {{company}}’s online presence and see a few opportunities to improve your visibility and engagement.
+
+Specifically, I noticed your site could benefit from better schema markup and a more modern tech stack. I’d love to hop on a brief call to share a few actionable insights.
+
+Let me know a time that works for you — I’m happy to work around your schedule.
+
+Best regards,
+Jane Doe
+HGM Intelligence</textarea>
+                <div class="field-hint">Use <span class="text-gold">{{field}}</span> placeholders (e.g., {{firstName}}, {{company}}) to inject spreadsheet data.</div>
             </div>
         </div>
 
@@ -1370,7 +1380,7 @@
         });
 
         // ═══════════════════════════════════════════════════════════════
-        //  12. TEMPLATE RENDERER
+        //  12. TEMPLATE RENDERER — Corporate styling with engaging design
         // ═══════════════════════════════════════════════════════════════
 
         function renderTemplate(data) {
@@ -1379,12 +1389,10 @@
 
             // Process emailBody: replace {{field}} placeholders
             let bodyText = data.emailBody || '';
-            // Replace {{field}} with actual values
             FIELD_IDS.forEach(fid => {
                 const val = data[fid] || '';
                 bodyText = bodyText.replace(new RegExp(`\\{\\{${fid}\\}\\}`, 'g'), val);
             });
-            // Also support {{firstName}} alias
             bodyText = bodyText.replace(/\{\{firstName\}\}/g, data.firstName || '');
             bodyText = bodyText.replace(/\{\{company\}\}/g, data.company || '');
             bodyText = bodyText.replace(/\{\{website\}\}/g, data.website || '');
@@ -1397,121 +1405,132 @@
             // Convert newlines to <br> for HTML
             const bodyHtml = bodyText.replace(/\n/g, '<br>');
 
-            // SEO score color
-            const seoNum = parseInt(data.seoScore, 10) || 0;
-            const seoColor = seoNum < 40 ? '#cf4545' : seoNum < 70 ? '#d4af37' : '#4caf50';
-
             const companyName = data.company || 'Company';
             const websiteUrl = data.website || '#';
 
+            // ---- Corporate email template with refined styling ----
             return `<!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Audit Report: ${companyName}</title>
+            <title>HGM Intelligence – ${companyName}</title>
             <style>
-                body { margin: 0; padding: 0; background-color: #050505; color: #e5e5e5; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
-                table { border-spacing: 0; width: 100%; max-width: 600px; margin: 0 auto; background-color: #0a0a0a; }
+                /* Reset & base */
+                body { margin: 0; padding: 0; background-color: #eaeaea; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+                table { border-spacing: 0; width: 100%; max-width: 620px; margin: 0 auto; background-color: #ffffff; border-collapse: collapse; }
                 td { padding: 0; }
-                img { display: block; border: 0; }
+                img { display: block; border: 0; max-width: 100%; }
                 a { text-decoration: none; color: inherit; }
-                h1 { font-family: 'Georgia', serif; font-size: 28px; color: #ffffff; margin: 0 0 10px 0; letter-spacing: -0.5px; line-height: 1.2; }
-                p { font-size: 16px; line-height: 1.6; color: #9ca3af; margin: 0 0 20px 0; }
-                .gold-text { color: #D4AF37; font-weight: bold; }
-                .red-text { color: #cf4545; font-weight: bold; }
-                .tiny-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #D4AF37; font-weight: bold; margin-bottom: 10px; display: block; }
-                .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #666; display: block; margin-top:5px;}
-                .stat-number { font-size: 32px; font-weight: 700; color: #fff; font-family: 'Georgia', serif; }
-                .btn-gold {
+
+                /* Outer container with subtle shadow */
+                .email-wrapper { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); margin: 24px auto; overflow: hidden; }
+
+                /* Header with gold accent */
+                .header { padding: 28px 30px 8px; text-align: center; background: #ffffff; border-bottom: 2px solid #D4AF37; }
+                .header img { margin: 0 auto; width: 140px; }
+
+                /* Content area */
+                .content { padding: 32px 30px 24px; color: #2c2c2c; font-size: 16px; line-height: 1.7; }
+                .content .greeting { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 14px; letter-spacing: -0.2px; }
+                .content p { margin: 0 0 18px 0; }
+                .content .signature { margin-top: 24px; font-size: 15px; color: #333; }
+                .content .signature strong { color: #1a1a1a; font-weight: 600; }
+
+                /* Button */
+                .btn-container { text-align: center; margin: 28px 0 20px; }
+                .btn {
                     display: inline-block;
                     background: linear-gradient(135deg, #BF953F 0%, #B38728 100%);
-                    color: #000000;
-                    font-weight: bold;
+                    color: #000000 !important;
+                    font-weight: 700;
                     text-transform: uppercase;
-                    letter-spacing: 1px;
-                    font-size: 12px;
-                    padding: 16px 32px;
-                    border-radius: 2px;
-                    text-align: center;
+                    letter-spacing: 0.5px;
+                    font-size: 14px;
+                    padding: 14px 38px;
+                    border-radius: 30px;
+                    text-decoration: none;
+                    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+                    transition: all 0.2s ease;
                 }
-                .panel { border: 1px solid rgba(212, 175, 55, 0.2); padding: 40px; background-color: rgba(255, 255, 255, 0.02); }
-                .divider { height: 1px; background-color: rgba(255, 255, 255, 0.1); margin: 30px 0; }
-                .score-box { background-color: rgba(0,0,0,0.3); border: 1px solid #222; padding: 15px; text-align: center; border-radius: 4px; }
+                .btn:hover { opacity: 0.92; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35); }
+
+                /* Divider */
+                .divider { height: 1px; background: #e8e8e8; margin: 20px 0 16px; }
+
+                /* Footer */
+                .footer { padding: 20px 30px 24px; text-align: center; font-size: 13px; color: #999999; background: #f8f8f8; border-top: 1px solid #e8e8e8; }
+                .footer .company-name { font-weight: 700; color: #666; letter-spacing: 0.3px; }
+                .footer a { color: #999999; text-decoration: underline; }
+                .footer .social-links { margin-top: 10px; }
+                .footer .social-links a { display: inline-block; margin: 0 6px; color: #999; text-decoration: none; font-weight: 600; font-size: 14px; }
+
+                /* Responsive */
                 @media only screen and (max-width: 600px) {
-                    .panel { padding: 25px; }
-                    h1 { font-size: 24px; }
-                    .mobile-stack { display: block; width: 100%; margin-bottom: 10px; }
+                    .header { padding: 20px 20px 6px; }
+                    .header img { width: 110px; }
+                    .content { padding: 24px 20px 18px; font-size: 15px; }
+                    .content .greeting { font-size: 18px; }
+                    .btn { padding: 12px 28px; font-size: 13px; }
+                    .footer { padding: 16px 20px; font-size: 12px; }
                 }
             </style>
         </head>
         <body>
-            <div style="display: none; max-height: 0; overflow: hidden;">
-                Site Audit for ${companyName}: Critical issues detected (Score: ${data.seoScore || 'N/A'}).
+            <!-- Preheader (hidden, for email clients) -->
+            <div style="display: none; max-height: 0; overflow: hidden; color: #eaeaea; font-size: 1px; line-height: 1px;">
+                ${companyName} – A message from HGM Intelligence
             </div>
-            <table role="presentation">
+
+            <table role="presentation" class="email-wrapper">
                 <tr>
-                    <td style="padding: 40px 0; text-align: center;">
-                        <img src="https://holisticgrowthmarketing.com/images/optimized-logo.webp" alt="HGM" width="100" style="margin: 0 auto; opacity: 0.8;" />
-                    </td>
-                </tr>
-                <tr>
-                    <td class="panel">
-                        <span class="tiny-label">Intelligence Brief</span>
-                        <h1>Analysis: <span class="gold-text">${companyName}</span></h1>
-                        <table role="presentation" width="100%" style="margin: 25px 0 30px 0;">
-                            <tr>
-                                <td width="32%" class="mobile-stack">
-                                    <div class="score-box">
-                                        <span class="stat-number" style="color: ${seoColor};">${data.seoScore || '—'}</span>
-                                        <span class="stat-label">SEO Score</span>
-                                    </div>
-                                </td>
-                                <td width="2%"></td>
-                                <td width="32%" class="mobile-stack">
-                                    <div class="score-box">
-                                        <span class="stat-number">${data.compScore || '—'}</span>
-                                        <span class="stat-label">Composite</span>
-                                    </div>
-                                </td>
-                                <td width="2%"></td>
-                                <td width="32%" class="mobile-stack">
-                                    <div class="score-box">
-                                        <span class="stat-number" style="color: #D4AF37;">High</span>
-                                        <span class="stat-label">Potential</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                        <p style="margin-bottom: 5px; color: #fff; font-weight: bold; font-size: 14px;">Detected Stack:</p>
-                        <p style="font-size: 13px; color: #666; margin-bottom: 20px; font-family: monospace;">${data.stack || 'Not detected'}</p>
-                        <p style="margin-bottom: 5px; color: #fff; font-weight: bold; font-size: 14px;">Critical Issue:</p>
-                        <p style="color: #cf4545; border-left: 2px solid #cf4545; padding-left: 10px; margin-bottom: 30px;">
-                            ${data.issues || 'No critical issues reported.'}
-                        </p>
-                        <div class="divider"></div>
-                        <p>Hi ${greetingName},</p>
-                        <p>${bodyHtml}</p>
-                        <table role="presentation" width="100%" style="margin-top: 35px;">
-                            <tr>
-                                <td align="center">
-                                    <a href="https://holisticgrowthmarketing.com/contact" class="btn-gold">
-                                        Review Full Audit Data
-                                    </a>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 40px 0; text-align: center; color: #444; font-size: 11px;">
-                        <p style="margin-bottom: 10px;">HOLISTIC GROWTH MARKETING, LLC</p>
-                        <p>Automated Intelligence Unit</p>
-                        <p style="margin-top: 20px;">
-                            <a href="${websiteUrl}" style="text-decoration: underline; color: #444;">${companyName}</a> &bull;
-                            ${data.email ? `<a href="mailto:${data.email}" style="text-decoration: underline; color: #444;">${data.email}</a> &bull;` : ''}
-                            <a href="https://script.google.com/macros/s/AKfycbyrylMb9TmflgCHF6b4qJ1VO6qJdbHyqXfH1PNdPvjqc79_T53l0AoVaWzseHwnSa61/exec" style="text-decoration: underline; color: #444;">Unsubscribe</a>
-                        </p>
+                    <td>
+                        <!-- Header with logo and gold accent -->
+                        <div class="header">
+                            <img src="https://holisticgrowthmarketing.com/images/optimized-logo.webp" alt="HGM Intelligence" width="140" style="width: 140px; max-width: 100%;" />
+                        </div>
+
+                        <!-- Main content -->
+                        <div class="content">
+                            <p class="greeting">Hi ${greetingName},</p>
+                            ${bodyHtml}
+
+                            <!-- Call to action -->
+                            <div class="btn-container">
+                                <a href="https://holisticgrowthmarketing.com/contact" class="btn">Let’s Connect</a>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="divider"></div>
+
+                            <!-- Signature -->
+                            <div class="signature">
+                                <p style="margin: 0;">I look forward to hearing from you.</p>
+                                <p style="margin: 8px 0 0 0;">
+                                    <strong>The HGM Team</strong><br />
+                                    <span style="color: #888; font-size: 14px;">Holistic Growth Marketing</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="footer">
+                            <p style="margin: 0 0 6px 0;">
+                                <span class="company-name">HOLISTIC GROWTH MARKETING, LLC</span>
+                            </p>
+                            <p style="margin: 0 0 8px 0; font-size: 12px;">
+                                <a href="${websiteUrl}">${companyName}</a> &bull;
+                                ${data.email ? `<a href="mailto:${data.email}">${data.email}</a> &bull;` : ''}
+                                <a href="https://script.google.com/macros/s/AKfycbyrylMb9TmflgCHF6b4qJ1VO6qJdbHyqXfH1PNdPvjqc79_T53l0AoVaWzseHwnSa61/exec">Unsubscribe</a>
+                            </p>
+                            <div class="social-links">
+                                <a href="#" style="text-decoration: none;">LinkedIn</a>
+                                <span style="color: #ddd;">·</span>
+                                <a href="#" style="text-decoration: none;">Twitter</a>
+                                <span style="color: #ddd;">·</span>
+                                <a href="#" style="text-decoration: none;">YouTube</a>
+                            </div>
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -1632,9 +1651,8 @@
         //  18. INIT — run once
         // ═══════════════════════════════════════════════════════════════
 
-        // Set default example data if no CSV loaded
         (function init() {
-            // Populate with default example values
+            // Set default example data (commercial email style)
             setField('company', 'Evergreen Home Loans Portland');
             setField('website', 'https://www.evergreenhomeloans.com');
             setField('firstName', '');
@@ -1643,15 +1661,24 @@
             setField('stack', 'jQuery, Analytics');
             setField('issues', 'No schema markup — Missing rich snippets');
             setField('emailBody',
-                'I noticed the Evergreen Home Loans Portland site is currently missing critical schema markup. Implementing rich snippets helps your NMLS details and services stand out significantly in search results, driving more targeted traffic. Could we schedule a fast 15-minute call next week so I can show you how easily we deploy this fix?'
-                );
+                `Hi {{firstName}},
+
+I hope this message finds you well. I've been reviewing {{company}}'s online presence and see a few opportunities to improve your visibility and engagement.
+
+Specifically, I noticed your site could benefit from better schema markup and a more modern tech stack. I'd love to hop on a brief call to share a few actionable insights.
+
+Let me know a time that works for you — I'm happy to work around your schedule.
+
+Best regards,
+Jane Doe
+HGM Intelligence`
+            );
             setField('email', '');
 
             updateOutput();
             updateRowCount();
             updateNavButtons();
 
-            // Show a small tip
             console.log('💡 Upload a CSV to auto-populate fields. Use {{field}} placeholders in the email body.');
         })();
 
