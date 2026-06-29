@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HGM Intelligence Email Generator | Spreadsheet Workflow</title>
+    <style>
+        /* ── Reset & Root ── */
+        * {
+            box-sizing: border-box;
+        }
+        :root {
+            --bg-dark: #050505;
+            --bg-panel: #0a0a0a;
+            --bg-input: #111;
+            --border: #222;
+            --gold: #D4AF37;
+            --gold-dim: rgba(212, 175, 55, 0.2);
+            --text-main: #e5e5e5;
+            --text-muted: #9ca3af;
+            --red: #cf4545;
+            --radius: 4px;
+            --transition: 0.25s ease;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 10px;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 380px;
+            min-width: 380px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            padding: 18px 16px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .sidebar h2 {
+            font-family: 'Georgia', serif;
+            color: var(--gold);
+            margin: 0 0 2px 0;
+            font-size: 17px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .sidebar .subhead {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin: 4px 0 8px 0;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        /* ── Import Section ── */
+        .import-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 14px 10px;
+        }
+        .import-section label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .file-upload-wrap {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .file-upload-wrap input[type="file"] {
+            flex: 1;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 6px 8px;
+            cursor: pointer;
+        }
+        .file-upload-wrap input[type="file"]::file-selector-button {
+            background: var(--gold);
+            border: none;
+            border-radius: var(--radius);
+            padding: 4px 12px;
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+            cursor: pointer;
+            color: #000;
+            margin-right: 8px;
+        }
+        .file-upload-wrap .file-status {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* ── Mapping Grid ── */
+        .mapping-area {
+            margin-top: 10px;
+            display: none;
+            /* shown via JS */;
+        }
+        .mapping-area.visible {
+            display: block;
+        }
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 10px;
+            margin: 6px 0 10px 0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .mapping-grid .mapping-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+        }
+        .mapping-grid .mapping-item .field-label {
+            color: var(--text-muted);
+            font-weight: 500;
+            min-width: 52px;
+            text-transform: uppercase;
+            font-size: 9px;
+            letter-spacing: 0.5px;
+        }
+        .mapping-grid .mapping-item select {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            min-width: 0;
+        }
+        .mapping-grid .mapping-item select:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        .mapping-grid .mapping-item .mapped-badge {
+            font-size: 8px;
+            color: var(--gold);
+            margin-left: 2px;
+        }
+
+        /* ── Row Navigation ── */
+        .row-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 6px 0 2px;
+        }
+        .row-nav label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .row-nav select {
+            flex: 1;
+            min-width: 60px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #fff;
+            font-size: 11px;
+            padding: 4px 6px;
+            border-radius: var(--radius);
+            cursor: pointer;
+        }
+        .row-nav select:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        .row-nav .nav-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 3px 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .row-nav .nav-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .row-nav .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+        .row-count {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        /* ── Batch Actions ── */
+        .batch-actions {
+            display: flex;
+            gap: 6px;
+            margin: 4px 0 2px;
+            flex-wrap: wrap;
+        }
+        .batch-actions .btn-sm {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 4px 12px;
+            border-radius: var(--radius);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .batch-actions .btn-sm:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        .batch-actions .btn-sm.primary {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: #000;
+        }
+        .batch-actions .btn-sm.primary:hover {
+            opacity: 0.85;
+        }
+
+        /* ── Data Fields ── */
+        .fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+        }
+        .fields-grid .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .fields-grid .input-group.full {
+            grid-column: 1 / -1;
+        }
+        .fields-grid .input-group label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .fields-grid .input-group input,
+        .fields-grid .input-group textarea {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 6px 8px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-family: inherit;
+            transition: var(--transition);
+            width: 100%;
+        }
+        .fields-grid .input-group input:focus,
+        .fields-grid .input-group textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        .fields-grid .input-group textarea {
+            resize: vertical;
+            min-height: 52px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .fields-grid .input-group .field-hint {
+            font-size: 8px;
+            color: var(--text-muted);
+            opacity: 0.5;
+            margin-top: 1px;
+        }
+
+        /* ── Email Body (special) ── */
+        .email-body-wrap .input-group textarea {
+            min-height: 80px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        /* ── Actions ── */
+        .action-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 2px;
+        }
+        .btn-action {
+            background: linear-gradient(135deg, #BF953F 0%, #B38728 100%);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+        }
+        .btn-action:hover {
+            opacity: 0.85;
+            transform: scale(0.98);
+        }
+        .btn-action.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+        .btn-action.secondary:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* ── Main View ── */
+        .main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: #111;
+            min-width: 0;
+        }
+        .tabs {
+            display: flex;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .tab {
+            padding: 14px 24px;
+            cursor: pointer;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border);
+            transition: var(--transition);
+            user-select: none;
+        }
+        .tab:hover {
+            color: #fff;
+        }
+        .tab.active {
+            background: #111;
+            color: var(--gold);
+            border-bottom: 2px solid var(--gold);
+        }
+        .content-area {
+            flex-grow: 1;
+            padding: 16px;
+            overflow-y: auto;
+            position: relative;
+            background: #0d0d0d;
+        }
+        #preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+            max-width: 680px;
+            margin: 0 auto;
+            display: block;
+            border-radius: var(--radius);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+        }
+        #code-output {
+            width: 100%;
+            height: 100%;
+            background: #0d0d0d;
+            color: #a5b3ce;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            border: none;
+            padding: 20px;
+            box-sizing: border-box;
+            display: none;
+            resize: none;
+            white-space: pre;
+            overflow: auto;
+            border-radius: var(--radius);
+            line-height: 1.6;
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--gold);
+            color: #000;
+            padding: 10px 28px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── Responsive tweaks ── */
+        @media (max-width: 820px) {
+            body {
+                flex-direction: column;
+                height: auto;
+                overflow: auto;
+            }
+            .sidebar {
+                width: 100%;
+                min-width: unset;
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .main {
+                height: 600px;
+                min-height: 500px;
+            }
+            .fields-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .mapping-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 500px) {
+            .fields-grid {
+                grid-template-columns: 1fr;
+            }
+            .mapping-grid {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                padding: 12px;
+            }
+            .row-nav {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* ── Misc ── */
+        .hidden {
+            display: none !important;
+        }
+        .flex {
+            display: flex;
+        }
+        .gap-1 {
+            gap: 6px;
+        }
+        .items-center {
+            align-items: center;
+        }
+        .text-gold {
+            color: var(--gold);
+        }
+        .text-muted {
+            color: var(--text-muted);
+        }
+        .mt-1 {
+            margin-top: 4px;
+        }
+        .mb-1 {
+            margin-bottom: 4px;
+        }
+        .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── TOAST ─── -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ─── SIDEBAR ─── -->
+    <div class="sidebar">
+
+        <h2>⛭ Email Generator</h2>
+        <div class="subhead">Internal Tool</div>
+
+        <!-- ── SPREADSHEET IMPORT ── -->
+        <div class="import-section">
+            <label>📂 Import Spreadsheet (CSV)</label>
+            <div class="file-upload-wrap">
+                <input type="file" id="csvFile" accept=".csv,.tsv,.txt" />
+                <span class="file-status" id="fileStatus">No file</span>
+            </div>
+
+            <!-- Mapping Area -->
+            <div class="mapping-area" id="mappingArea">
+                <div class="mapping-grid" id="mappingGrid">
+                    <!-- Rows injected by JS -->
+                </div>
+
+                <!-- Row Navigation -->
+                <div class="row-nav">
+                    <label>Row</label>
+                    <select id="rowSelector"><option value="0">—</option></select>
+                    <button class="nav-btn" id="prevRowBtn" title="Previous row">◀</button>
+                    <button class="nav-btn" id="nextRowBtn" title="Next row">▶</button>
+                    <span class="row-count" id="rowCount">0 / 0</span>
+                </div>
+
+                <!-- Batch Actions -->
+                <div class="batch-actions">
+                    <button class="btn-sm primary" id="generateAllBtn">⚡ Generate All</button>
+                    <button class="btn-sm" id="exportCsvBtn">📥 Export CSV</button>
+                    <button class="btn-sm" id="resetMappingBtn">⟲ Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── DATA FIELDS ── -->
+        <div style="margin-top: 2px;">
+            <div class="subhead" style="margin-bottom: 6px;">Data Fields</div>
+            <div class="fields-grid" id="fieldsGrid">
+                <div class="input-group">
+                    <label>First Name</label>
+                    <input type="text" id="firstName" placeholder="e.g. Jane" />
+                </div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="text" id="email" placeholder="jane@company.com" />
+                </div>
+                <div class="input-group">
+                    <label>Company Name</label>
+                    <input type="text" id="company" placeholder="Acme Inc." />
+                </div>
+                <div class="input-group">
+                    <label>Website URL</label>
+                    <input type="text" id="website" placeholder="https://example.com" />
+                </div>
+                <div class="input-group">
+                    <label>SEO Score</label>
+                    <input type="number" id="seoScore" value="50" />
+                </div>
+                <div class="input-group">
+                    <label>Composite</label>
+                    <input type="number" id="compScore" value="69" />
+                </div>
+                <div class="input-group full">
+                    <label>Tech Stack</label>
+                    <input type="text" id="stack" placeholder="jQuery, Analytics" />
+                </div>
+                <div class="input-group full">
+                    <label>Critical Issues</label>
+                    <textarea id="issues" rows="2" placeholder="No schema markup — Missing rich snippets"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── EMAIL BODY TEMPLATE ── -->
+        <div class="email-body-wrap">
+            <div class="subhead" style="margin-bottom: 4px;">Email Body</div>
+            <div class="input-group">
+                <textarea id="emailBody" rows="4" placeholder="Paste or type the email body text…">I noticed the Acme Inc. site is currently missing critical schema markup. Implementing rich snippets helps your NMLS details and services stand out significantly in search results, driving more targeted traffic. Could we schedule a fast 15-minute call next week so I can show you how easily we deploy this fix?</textarea>
+                <div class="field-hint">This text is inserted into the HTML template. Use <span class="text-gold">{{field}}</span> placeholders to inject data (optional).</div>
+            </div>
+        </div>
+
+        <!-- ── ACTIONS ── -->
+        <div class="action-row">
+            <button class="btn-action" id="copyBtn">📋 Copy HTML</button>
+            <button class="btn-action secondary" id="previewBtn">👁 Preview</button>
+        </div>
+        <div style="font-size: 9px; color: var(--text-muted); opacity: 0.5; text-align: center; margin-top: 2px;">
+            Fields auto-populate from spreadsheet when a row is selected.
+        </div>
+    </div>
+
+    <!-- ─── MAIN VIEW ─── -->
+    <div class="main">
+        <div class="tabs">
+            <div class="tab active" data-tab="preview">Live Preview</div>
+            <div class="tab" data-tab="code">HTML Source</div>
+        </div>
+        <div class="content-area">
+            <iframe id="preview-frame"></iframe>
+            <textarea id="code-output" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        //  1.  CONFIG & STATE
+        // ═══════════════════════════════════════════════════════════════
+
+        const FIELD_IDS = [
+            'firstName',
+            'email',
+            'company',
+            'website',
+            'seoScore',
+            'compScore',
+            'stack',
+            'issues',
+            'emailBody'
+        ];
+
+        // Human-readable labels for the mapping UI
+        const FIELD_LABELS = {
+            firstName: 'First Name',
+            email: 'Email',
+            company: 'Company',
+            website: 'Website',
+            seoScore: 'SEO Score',
+            compScore: 'Composite',
+            stack: 'Tech Stack',
+            issues: 'Issues',
+            emailBody: 'Email Body'
+        };
+
+        // Heuristics for auto-mapping header → field
+        const AUTO_MAP_RULES = [{
+            field: 'firstName',
+            patterns: [/first/i, /^name$/i, /given/i, /contact/i, /fullname/i]
+        }, {
+            field: 'email',
+            patterns: [/email/i, /e-mail/i, /mail/i]
+        }, {
+            field: 'company',
+            patterns: [/company/i, /organization/i, /org/i, /business/i, /firm/i]
+        }, {
+            field: 'website',
+            patterns: [/website/i, /web/i, /url/i, /site/i, /domain/i]
+        }, {
+            field: 'seoScore',
+            patterns: [/seo/i, /score/i, /seo score/i, /seo_score/i]
+        }, {
+            field: 'compScore',
+            patterns: [/composite/i, /comp/i, /overall/i, /combined/i]
+        }, {
+            field: 'stack',
+            patterns: [/tech/i, /stack/i, /technology/i, /framework/i, /platform/i]
+        }, {
+            field: 'issues',
+            patterns: [/issue/i, /critical/i, /problem/i, /error/i, /warning/i, /audit/i]
+        }, {
+            field: 'emailBody',
+            patterns: [/body/i, /message/i, /content/i, /email body/i, /email_body/i]
+        }];
+
+        // State
+        let csvData = []; // array of objects (header → value)
+        let headers = [];
+        let fieldMapping = {}; // fieldId → headerName
+        let currentRowIndex = 0;
+        let isGeneratingAll = false;
+
+        // DOM refs
+        const $ = id => document.getElementById(id);
+        const csvFile = $('csvFile');
+        const fileStatus = $('fileStatus');
+        const mappingArea = $('mappingArea');
+        const mappingGrid = $('mappingGrid');
+        const rowSelector = $('rowSelector');
+        const prevRowBtn = $('prevRowBtn');
+        const nextRowBtn = $('nextRowBtn');
+        const rowCount = $('rowCount');
+        const generateAllBtn = $('generateAllBtn');
+        const exportCsvBtn = $('exportCsvBtn');
+        const resetMappingBtn = $('resetMappingBtn');
+        const copyBtn = $('copyBtn');
+        const previewBtn = $('previewBtn');
+        const previewFrame = $('preview-frame');
+        const codeOutput = $('code-output');
+        const toastEl = $('toast');
+
+        // ── toast helper ──
+        let toastTimer = null;
+
+        function showToast(msg, duration = 2000) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toastEl.classList.remove('show'), duration);
+        }
+
+        // ── get all field values as object ──
+        function getFieldValues() {
+            const obj = {};
+            FIELD_IDS.forEach(id => {
+                const el = $(id);
+                obj[id] = el ? el.value : '';
+            });
+            return obj;
+        }
+
+        // ── set all field values from object ──
+        function setFieldValues(data) {
+            FIELD_IDS.forEach(id => {
+                const el = $(id);
+                if (el && data[id] !== undefined) {
+                    el.value = data[id] !== null ? data[id] : '';
+                }
+            });
+        }
+
+        // ── get a single field value ──
+        function getField(id) {
+            const el = $(id);
+            return el ? el.value : '';
+        }
+
+        // ── set a single field value ──
+        function setField(id, val) {
+            const el = $(id);
+            if (el) el.value = val !== null && val !== undefined ? val : '';
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  2.  CSV PARSING (handles quoted fields, multi-line)
+        // ═══════════════════════════════════════════════════════════════
+
+        function parseCSV(text) {
+            const lines = [];
+            let current = '';
+            let inQuotes = false;
+            let i = 0;
+            const len = text.length;
+
+            for (; i < len; i++) {
+                const ch = text[i];
+                if (inQuotes) {
+                    if (ch === '"' && (i + 1 < len && text[i + 1] === '"')) {
+                        current += '"';
+                        i++;
+                    } else if (ch === '"') {
+                        inQuotes = false;
+                    } else {
+                        current += ch;
+                    }
+                } else {
+                    if (ch === '"') {
+                        inQuotes = true;
+                    } else if (ch === '\n' || (ch === '\r' && (i + 1 === len || text[i + 1] !== '\n'))) {
+                        lines.push(current);
+                        current = '';
+                        if (ch === '\r' && i + 1 < len && text[i + 1] === '\n') i++;
+                    } else if (ch === '\r' && i + 1 < len && text[i + 1] === '\n') {
+                        lines.push(current);
+                        current = '';
+                        i++;
+                    } else if (ch === ',') {
+                        lines.push(current);
+                        current = '';
+                    } else {
+                        current += ch;
+                    }
+                }
+            }
+            if (current !== '' || lines.length > 0) {
+                lines.push(current);
+            }
+
+            // Trim each field
+            const trimmed = lines.map(s => s.trim());
+            return trimmed;
+        }
+
+        function csvToObjects(text) {
+            const rows = [];
+            const rawLines = text.split(/\r?\n/);
+            if (rawLines.length === 0) return { headers: [], rows: [] };
+
+            // Parse first row as headers
+            const headerLine = rawLines[0];
+            const headers = parseCSV(headerLine);
+
+            for (let r = 1; r < rawLines.length; r++) {
+                const line = rawLines[r];
+                if (line.trim() === '') continue;
+                const fields = parseCSV(line);
+                const obj = {};
+                headers.forEach((h, idx) => {
+                    obj[h] = (idx < fields.length) ? fields[idx] : '';
+                });
+                rows.push(obj);
+            }
+            return { headers, rows };
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  3.  AUTO-MAPPING
+        // ═══════════════════════════════════════════════════════════════
+
+        function autoMapHeaders(headerList) {
+            const mapping = {};
+            const usedHeaders = new Set();
+
+            // First pass: exact matches and pattern matches
+            FIELD_IDS.forEach(fieldId => {
+                let bestMatch = null;
+                let bestScore = -1;
+
+                const rules = AUTO_MAP_RULES.find(r => r.field === fieldId);
+                if (!rules) return;
+
+                headerList.forEach(h => {
+                    const hLower = h.toLowerCase().trim();
+                    let score = 0;
+                    for (const pat of rules.patterns) {
+                        if (pat.test(hLower)) {
+                            score += 10;
+                            // bonus for exact or near-exact
+                            if (hLower === pat.source.toLowerCase() ||
+                                hLower.includes(pat.source.toLowerCase())) {
+                                score += 5;
+                            }
+                            break;
+                        }
+                    }
+                    // bonus for shorter headers (likely more specific)
+                    if (score > 0 && h.length < 20) score += 2;
+                    if (score > bestScore && !usedHeaders.has(h)) {
+                        bestScore = score;
+                        bestMatch = h;
+                    }
+                });
+
+                if (bestMatch && bestScore > 0) {
+                    mapping[fieldId] = bestMatch;
+                    usedHeaders.add(bestMatch);
+                }
+            });
+
+            // Second pass: assign remaining headers to unmapped fields
+            const unmappedFields = FIELD_IDS.filter(f => !mapping[f]);
+            const unmappedHeaders = headerList.filter(h => !usedHeaders.has(h));
+
+            unmappedFields.forEach((fieldId, idx) => {
+                if (idx < unmappedHeaders.length) {
+                    mapping[fieldId] = unmappedHeaders[idx];
+                    usedHeaders.add(unmappedHeaders[idx]);
+                }
+            });
+
+            return mapping;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  4.  RENDER MAPPING UI
+        // ═══════════════════════════════════════════════════════════════
+
+        function renderMappingUI(headerList, mapping) {
+            mappingGrid.innerHTML = '';
+            FIELD_IDS.forEach(fieldId => {
+                const div = document.createElement('div');
+                div.className = 'mapping-item';
+
+                const label = document.createElement('span');
+                label.className = 'field-label';
+                label.textContent = FIELD_LABELS[fieldId] || fieldId;
+                div.appendChild(label);
+
+                const select = document.createElement('select');
+                select.dataset.field = fieldId;
+
+                // Empty option
+                const emptyOpt = document.createElement('option');
+                emptyOpt.value = '';
+                emptyOpt.textContent = '—';
+                select.appendChild(emptyOpt);
+
+                headerList.forEach(h => {
+                    const opt = document.createElement('option');
+                    opt.value = h;
+                    opt.textContent = h;
+                    if (mapping[fieldId] === h) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                });
+
+                // If the mapped header isn't in the list, add it as a disabled placeholder
+                if (mapping[fieldId] && !headerList.includes(mapping[fieldId])) {
+                    const opt = document.createElement('option');
+                    opt.value = mapping[fieldId];
+                    opt.textContent = mapping[fieldId] + ' (missing)';
+                    opt.disabled = true;
+                    opt.selected = true;
+                    select.appendChild(opt);
+                }
+
+                select.addEventListener('change', (e) => {
+                    const val = e.target.value;
+                    fieldMapping[fieldId] = val || null;
+                    // If a row is selected, re-populate
+                    if (csvData.length > 0 && currentRowIndex < csvData.length) {
+                        populateFieldsFromRow(currentRowIndex);
+                    }
+                    updateOutput();
+                });
+
+                div.appendChild(select);
+
+                // Show a small badge if auto-mapped
+                const badge = document.createElement('span');
+                badge.className = 'mapped-badge';
+                if (mapping[fieldId]) {
+                    badge.textContent = '✓';
+                }
+                div.appendChild(badge);
+
+                mappingGrid.appendChild(div);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  5.  POPULATE FIELDS FROM ROW
+        // ═══════════════════════════════════════════════════════════════
+
+        function populateFieldsFromRow(index) {
+            if (!csvData.length || index < 0 || index >= csvData.length) {
+                // If no data, clear fields (but keep emailBody if it was manually edited)
+                const keepBody = getField('emailBody');
+                FIELD_IDS.forEach(id => {
+                    if (id !== 'emailBody') setField(id, '');
+                });
+                // Only clear body if we're not preserving it
+                // Actually, let's clear everything when no row is selected
+                FIELD_IDS.forEach(id => setField(id, ''));
+                return;
+            }
+
+            const row = csvData[index];
+            const mapping = fieldMapping;
+
+            FIELD_IDS.forEach(fieldId => {
+                const header = mapping[fieldId];
+                let val = '';
+                if (header && row[header] !== undefined) {
+                    val = row[header];
+                }
+                setField(fieldId, val);
+            });
+
+            // Update row selector
+            rowSelector.value = index;
+            updateRowCount();
+            updateNavButtons();
+        }
+
+        function updateRowCount() {
+            const total = csvData.length;
+            const idx = currentRowIndex;
+            rowCount.textContent = total > 0 ? `${idx + 1} / ${total}` : '0 / 0';
+        }
+
+        function updateNavButtons() {
+            const total = csvData.length;
+            prevRowBtn.disabled = total === 0 || currentRowIndex <= 0;
+            nextRowBtn.disabled = total === 0 || currentRowIndex >= total - 1;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  6.  ROW SELECTOR POPULATE
+        // ═══════════════════════════════════════════════════════════════
+
+        function populateRowSelector() {
+            rowSelector.innerHTML = '';
+            if (csvData.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '0';
+                opt.textContent = '— No data —';
+                rowSelector.appendChild(opt);
+                return;
+            }
+
+            csvData.forEach((row, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                // Show a preview: first non-empty field or just the row number
+                let label = `Row ${idx + 1}`;
+                const firstField = FIELD_IDS.find(id => {
+                    const header = fieldMapping[id];
+                    return header && row[header] && row[header].trim() !== '';
+                });
+                if (firstField) {
+                    const header = fieldMapping[firstField];
+                    const val = row[header] || '';
+                    const short = val.length > 28 ? val.slice(0, 26) + '…' : val;
+                    label = `${idx + 1}: ${short}`;
+                } else {
+                    // Try any field
+                    for (const h of headers) {
+                        if (row[h] && row[h].trim() !== '') {
+                            const short = row[h].length > 28 ? row[h].slice(0, 26) + '…' : row[h];
+                            label = `${idx + 1}: ${short}`;
+                            break;
+                        }
+                    }
+                }
+                opt.textContent = label;
+                if (idx === currentRowIndex) opt.selected = true;
+                rowSelector.appendChild(opt);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  7.  HANDLE FILE UPLOAD
+        // ═══════════════════════════════════════════════════════════════
+
+        csvFile.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) {
+                fileStatus.textContent = 'No file';
+                return;
+            }
+            fileStatus.textContent = `📄 ${file.name}`;
+
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const text = ev.target.result;
+                const { headers: hdrs, rows } = csvToObjects(text);
+
+                if (hdrs.length === 0 || rows.length === 0) {
+                    showToast('⚠️ No data found in CSV.', 2500);
+                    return;
+                }
+
+                headers = hdrs;
+                csvData = rows;
+                currentRowIndex = 0;
+
+                // Auto-map
+                const auto = autoMapHeaders(headers);
+                fieldMapping = auto;
+
+                // Show mapping area
+                mappingArea.classList.add('visible');
+
+                // Render mapping UI
+                renderMappingUI(headers, fieldMapping);
+
+                // Populate row selector
+                populateRowSelector();
+
+                // Populate fields from first row
+                populateFieldsFromRow(0);
+
+                // Update everything
+                updateOutput();
+
+                showToast(`✅ Loaded ${rows.length} rows, ${hdrs.length} columns`, 2000);
+            };
+            reader.readAsText(file);
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  8.  ROW NAVIGATION
+        // ═══════════════════════════════════════════════════════════════
+
+        function goToRow(index) {
+            if (csvData.length === 0) return;
+            if (index < 0) index = 0;
+            if (index >= csvData.length) index = csvData.length - 1;
+            currentRowIndex = index;
+            populateFieldsFromRow(index);
+            populateRowSelector();
+            updateOutput();
+        }
+
+        rowSelector.addEventListener('change', function() {
+            const idx = parseInt(this.value, 10);
+            if (!isNaN(idx) && idx >= 0 && idx < csvData.length) {
+                goToRow(idx);
+            }
+        });
+
+        prevRowBtn.addEventListener('click', () => goToRow(currentRowIndex - 1));
+        nextRowBtn.addEventListener('click', () => goToRow(currentRowIndex + 1));
+
+        // ═══════════════════════════════════════════════════════════════
+        //  9.  RESET MAPPING
+        // ═══════════════════════════════════════════════════════════════
+
+        resetMappingBtn.addEventListener('click', function() {
+            if (headers.length === 0) {
+                showToast('No data loaded.', 1500);
+                return;
+            }
+            const auto = autoMapHeaders(headers);
+            fieldMapping = auto;
+            renderMappingUI(headers, fieldMapping);
+            if (csvData.length > 0) {
+                populateFieldsFromRow(currentRowIndex);
+                updateOutput();
+            }
+            showToast('↻ Mapping reset', 1500);
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  10. GENERATE ALL
+        // ═══════════════════════════════════════════════════════════════
+
+        generateAllBtn.addEventListener('click', function() {
+            if (csvData.length === 0) {
+                showToast('⚠️ No data to generate.', 2000);
+                return;
+            }
+
+            // Build a mapping of fieldId → header for quick lookup
+            const map = fieldMapping;
+
+            // Collect all rows with generated HTML
+            const results = [];
+            let errorCount = 0;
+
+            csvData.forEach((row, idx) => {
+                try {
+                    // Build data object for this row
+                    const data = {};
+                    FIELD_IDS.forEach(fid => {
+                        const header = map[fid];
+                        if (header && row[header] !== undefined) {
+                            data[fid] = row[header];
+                        } else {
+                            data[fid] = '';
+                        }
+                    });
+
+                    // If emailBody is empty, use a fallback
+                    if (!data.emailBody || data.emailBody.trim() === '') {
+                        data.emailBody =
+                            `Custom message for ${data.firstName || 'client'} at ${data.company || 'your company'}.`;
+                    }
+
+                    // Render the template
+                    const html = renderTemplate(data);
+                    results.push({
+                        row: idx + 1,
+                        data: data,
+                        html: html
+                    });
+                } catch (err) {
+                    errorCount++;
+                    console.warn(`Error on row ${idx + 1}:`, err);
+                }
+            });
+
+            if (results.length === 0) {
+                showToast('⚠️ No emails generated.', 2000);
+                return;
+            }
+
+            // Build a downloadable CSV with the generated HTML
+            const headerRow = ['Row', ...FIELD_IDS.map(f => FIELD_LABELS[f] || f), 'GeneratedHTML'];
+            const csvRows = results.map(r => {
+                const row = [r.row];
+                FIELD_IDS.forEach(fid => {
+                    let val = r.data[fid] || '';
+                    // Escape quotes and commas
+                    if (typeof val === 'string') {
+                        val = val.replace(/"/g, '""');
+                    }
+                    row.push(`"${val}"`);
+                });
+                // HTML needs special escaping: replace " with "" and wrap in quotes
+                let html = r.html || '';
+                html = html.replace(/"/g, '""');
+                row.push(`"${html}"`);
+                return row.join(',');
+            });
+
+            const csvContent = [headerRow.join(','), ...csvRows].join('\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `generated_emails_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+
+            showToast(`✅ Generated ${results.length} emails${errorCount > 0 ? ` (${errorCount} errors)` : ''}`, 3000);
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  11. EXPORT CSV (raw data with current mapping)
+        // ═══════════════════════════════════════════════════════════════
+
+        exportCsvBtn.addEventListener('click', function() {
+            if (csvData.length === 0) {
+                showToast('⚠️ No data to export.', 2000);
+                return;
+            }
+
+            // Build a CSV with the mapped fields
+            const map = fieldMapping;
+            const fieldList = FIELD_IDS.filter(fid => map[fid]);
+            const headerRow = ['Row', ...fieldList.map(fid => FIELD_LABELS[fid] || fid)];
+
+            const rows = csvData.map((row, idx) => {
+                const vals = [idx + 1];
+                fieldList.forEach(fid => {
+                    const h = map[fid];
+                    let val = (h && row[h] !== undefined) ? row[h] : '';
+                    if (typeof val === 'string') {
+                        val = val.replace(/"/g, '""');
+                    }
+                    vals.push(`"${val}"`);
+                });
+                return vals.join(',');
+            });
+
+            const csvContent = [headerRow.join(','), ...rows].join('\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `mapped_data_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            showToast('📥 Exported mapped data', 2000);
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  12. TEMPLATE RENDERER
+        // ═══════════════════════════════════════════════════════════════
+
+        function renderTemplate(data) {
+            // Handle empty first name gracefully
+            const greetingName = data.firstName && data.firstName.trim() !== '' ? data.firstName.trim() : 'there';
+
+            // Process emailBody: replace {{field}} placeholders
+            let bodyText = data.emailBody || '';
+            // Replace {{field}} with actual values
+            FIELD_IDS.forEach(fid => {
+                const val = data[fid] || '';
+                bodyText = bodyText.replace(new RegExp(`\\{\\{${fid}\\}\\}`, 'g'), val);
+            });
+            // Also support {{firstName}} alias
+            bodyText = bodyText.replace(/\{\{firstName\}\}/g, data.firstName || '');
+            bodyText = bodyText.replace(/\{\{company\}\}/g, data.company || '');
+            bodyText = bodyText.replace(/\{\{website\}\}/g, data.website || '');
+            bodyText = bodyText.replace(/\{\{seoScore\}\}/g, data.seoScore || '');
+            bodyText = bodyText.replace(/\{\{compScore\}\}/g, data.compScore || '');
+            bodyText = bodyText.replace(/\{\{stack\}\}/g, data.stack || '');
+            bodyText = bodyText.replace(/\{\{issues\}\}/g, data.issues || '');
+            bodyText = bodyText.replace(/\{\{email\}\}/g, data.email || '');
+
+            // Convert newlines to <br> for HTML
+            const bodyHtml = bodyText.replace(/\n/g, '<br>');
+
+            // SEO score color
+            const seoNum = parseInt(data.seoScore, 10) || 0;
+            const seoColor = seoNum < 40 ? '#cf4545' : seoNum < 70 ? '#d4af37' : '#4caf50';
+
+            const companyName = data.company || 'Company';
+            const websiteUrl = data.website || '#';
+
+            return `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Audit Report: ${companyName}</title>
+            <style>
+                body { margin: 0; padding: 0; background-color: #050505; color: #e5e5e5; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+                table { border-spacing: 0; width: 100%; max-width: 600px; margin: 0 auto; background-color: #0a0a0a; }
+                td { padding: 0; }
+                img { display: block; border: 0; }
+                a { text-decoration: none; color: inherit; }
+                h1 { font-family: 'Georgia', serif; font-size: 28px; color: #ffffff; margin: 0 0 10px 0; letter-spacing: -0.5px; line-height: 1.2; }
+                p { font-size: 16px; line-height: 1.6; color: #9ca3af; margin: 0 0 20px 0; }
+                .gold-text { color: #D4AF37; font-weight: bold; }
+                .red-text { color: #cf4545; font-weight: bold; }
+                .tiny-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #D4AF37; font-weight: bold; margin-bottom: 10px; display: block; }
+                .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #666; display: block; margin-top:5px;}
+                .stat-number { font-size: 32px; font-weight: 700; color: #fff; font-family: 'Georgia', serif; }
+                .btn-gold {
+                    display: inline-block;
+                    background: linear-gradient(135deg, #BF953F 0%, #B38728 100%);
+                    color: #000000;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    font-size: 12px;
+                    padding: 16px 32px;
+                    border-radius: 2px;
+                    text-align: center;
+                }
+                .panel { border: 1px solid rgba(212, 175, 55, 0.2); padding: 40px; background-color: rgba(255, 255, 255, 0.02); }
+                .divider { height: 1px; background-color: rgba(255, 255, 255, 0.1); margin: 30px 0; }
+                .score-box { background-color: rgba(0,0,0,0.3); border: 1px solid #222; padding: 15px; text-align: center; border-radius: 4px; }
+                @media only screen and (max-width: 600px) {
+                    .panel { padding: 25px; }
+                    h1 { font-size: 24px; }
+                    .mobile-stack { display: block; width: 100%; margin-bottom: 10px; }
+                }
+            </style>
+        </head>
+        <body>
+            <div style="display: none; max-height: 0; overflow: hidden;">
+                Site Audit for ${companyName}: Critical issues detected (Score: ${data.seoScore || 'N/A'}).
+            </div>
+            <table role="presentation">
+                <tr>
+                    <td style="padding: 40px 0; text-align: center;">
+                        <img src="https://holisticgrowthmarketing.com/images/optimized-logo.webp" alt="HGM" width="100" style="margin: 0 auto; opacity: 0.8;" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="panel">
+                        <span class="tiny-label">Intelligence Brief</span>
+                        <h1>Analysis: <span class="gold-text">${companyName}</span></h1>
+                        <table role="presentation" width="100%" style="margin: 25px 0 30px 0;">
+                            <tr>
+                                <td width="32%" class="mobile-stack">
+                                    <div class="score-box">
+                                        <span class="stat-number" style="color: ${seoColor};">${data.seoScore || '—'}</span>
+                                        <span class="stat-label">SEO Score</span>
+                                    </div>
+                                </td>
+                                <td width="2%"></td>
+                                <td width="32%" class="mobile-stack">
+                                    <div class="score-box">
+                                        <span class="stat-number">${data.compScore || '—'}</span>
+                                        <span class="stat-label">Composite</span>
+                                    </div>
+                                </td>
+                                <td width="2%"></td>
+                                <td width="32%" class="mobile-stack">
+                                    <div class="score-box">
+                                        <span class="stat-number" style="color: #D4AF37;">High</span>
+                                        <span class="stat-label">Potential</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <p style="margin-bottom: 5px; color: #fff; font-weight: bold; font-size: 14px;">Detected Stack:</p>
+                        <p style="font-size: 13px; color: #666; margin-bottom: 20px; font-family: monospace;">${data.stack || 'Not detected'}</p>
+                        <p style="margin-bottom: 5px; color: #fff; font-weight: bold; font-size: 14px;">Critical Issue:</p>
+                        <p style="color: #cf4545; border-left: 2px solid #cf4545; padding-left: 10px; margin-bottom: 30px;">
+                            ${data.issues || 'No critical issues reported.'}
+                        </p>
+                        <div class="divider"></div>
+                        <p>Hi ${greetingName},</p>
+                        <p>${bodyHtml}</p>
+                        <table role="presentation" width="100%" style="margin-top: 35px;">
+                            <tr>
+                                <td align="center">
+                                    <a href="https://holisticgrowthmarketing.com/contact" class="btn-gold">
+                                        Review Full Audit Data
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 40px 0; text-align: center; color: #444; font-size: 11px;">
+                        <p style="margin-bottom: 10px;">HOLISTIC GROWTH MARKETING, LLC</p>
+                        <p>Automated Intelligence Unit</p>
+                        <p style="margin-top: 20px;">
+                            <a href="${websiteUrl}" style="text-decoration: underline; color: #444;">${companyName}</a> &bull;
+                            ${data.email ? `<a href="mailto:${data.email}" style="text-decoration: underline; color: #444;">${data.email}</a> &bull;` : ''}
+                            <a href="https://script.google.com/macros/s/AKfycbyrylMb9TmflgCHF6b4qJ1VO6qJdbHyqXfH1PNdPvjqc79_T53l0AoVaWzseHwnSa61/exec" style="text-decoration: underline; color: #444;">Unsubscribe</a>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>`;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  13. UPDATE OUTPUT (preview + code)
+        // ═══════════════════════════════════════════════════════════════
+
+        function updateOutput() {
+            const data = getFieldValues();
+
+            // If emailBody contains {{field}} placeholders, render them
+            let bodyText = data.emailBody || '';
+            FIELD_IDS.forEach(fid => {
+                const val = data[fid] || '';
+                bodyText = bodyText.replace(new RegExp(`\\{\\{${fid}\\}\\}`, 'g'), val);
+            });
+            bodyText = bodyText.replace(/\{\{firstName\}\}/g, data.firstName || '');
+            bodyText = bodyText.replace(/\{\{company\}\}/g, data.company || '');
+            bodyText = bodyText.replace(/\{\{website\}\}/g, data.website || '');
+            bodyText = bodyText.replace(/\{\{seoScore\}\}/g, data.seoScore || '');
+            bodyText = bodyText.replace(/\{\{compScore\}\}/g, data.compScore || '');
+            bodyText = bodyText.replace(/\{\{stack\}\}/g, data.stack || '');
+            bodyText = bodyText.replace(/\{\{issues\}\}/g, data.issues || '');
+            bodyText = bodyText.replace(/\{\{email\}\}/g, data.email || '');
+            // Update the emailBody field with rendered text (but don't overwrite the original template)
+            // We'll just use it for rendering
+
+            const renderedData = { ...data, emailBody: bodyText };
+
+            const html = renderTemplate(renderedData);
+
+            // Update code view
+            codeOutput.value = html;
+
+            // Update preview iframe
+            const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            doc.open();
+            doc.write(html);
+            doc.close();
+        }
+
+        // ── auto-update on any field change ──
+        FIELD_IDS.forEach(id => {
+            $(id).addEventListener('input', updateOutput);
+            $(id).addEventListener('change', updateOutput);
+        });
+
+        // ── also update when mapping changes ──
+        // (mapping changes already trigger populateFieldsFromRow → updateOutput)
+
+        // ═══════════════════════════════════════════════════════════════
+        //  14. TAB SWITCHING
+        // ═══════════════════════════════════════════════════════════════
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const target = this.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                if (target === 'preview') {
+                    previewFrame.style.display = 'block';
+                    codeOutput.style.display = 'none';
+                } else {
+                    previewFrame.style.display = 'none';
+                    codeOutput.style.display = 'block';
+                }
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  15. COPY HTML
+        // ═══════════════════════════════════════════════════════════════
+
+        copyBtn.addEventListener('click', function() {
+            const code = codeOutput.value;
+            if (!code) {
+                showToast('⚠️ No HTML to copy.', 1500);
+                return;
+            }
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('✅ HTML copied to clipboard!', 2000);
+            }).catch(() => {
+                // Fallback
+                codeOutput.select();
+                document.execCommand('copy');
+                showToast('✅ HTML copied!', 2000);
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  16. PREVIEW BUTTON (just refreshes)
+        // ═══════════════════════════════════════════════════════════════
+
+        previewBtn.addEventListener('click', function() {
+            updateOutput();
+            // Switch to preview tab
+            document.querySelector('.tab[data-tab="preview"]').click();
+            showToast('👁 Preview refreshed', 1200);
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  17. KEYBOARD SHORTCUTS (Ctrl+Enter → generate all)
+        // ═══════════════════════════════════════════════════════════════
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                generateAllBtn.click();
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        //  18. INIT — run once
+        // ═══════════════════════════════════════════════════════════════
+
+        // Set default example data if no CSV loaded
+        (function init() {
+            // Populate with default example values
+            setField('company', 'Evergreen Home Loans Portland');
+            setField('website', 'https://www.evergreenhomeloans.com');
+            setField('firstName', '');
+            setField('seoScore', '50');
+            setField('compScore', '69');
+            setField('stack', 'jQuery, Analytics');
+            setField('issues', 'No schema markup — Missing rich snippets');
+            setField('emailBody',
+                'I noticed the Evergreen Home Loans Portland site is currently missing critical schema markup. Implementing rich snippets helps your NMLS details and services stand out significantly in search results, driving more targeted traffic. Could we schedule a fast 15-minute call next week so I can show you how easily we deploy this fix?'
+                );
+            setField('email', '');
+
+            updateOutput();
+            updateRowCount();
+            updateNavButtons();
+
+            // Show a small tip
+            console.log('💡 Upload a CSV to auto-populate fields. Use {{field}} placeholders in the email body.');
+        })();
+
+        // ── expose some functions for debugging ──
+        window.__debug = {
+            csvData,
+            headers,
+            fieldMapping,
+            currentRowIndex,
+            getFieldValues,
+            setFieldValues,
+            renderTemplate,
+            updateOutput,
+            goToRow,
+            autoMapHeaders,
+            parseCSV,
+            csvToObjects
+        };
+    </script>
+</body>
+</html>
